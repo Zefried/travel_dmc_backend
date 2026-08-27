@@ -160,7 +160,7 @@ class AuthService
                 'email' => 'nullable|email|max:255|unique:users,email',
                 'phone' => 'nullable|string|max:20|unique:users,phone',
                 'password' => 'required|string|min:8',
-                'role' => 'required|in:hotel_admin,vehicle_admin,sub_admin',
+                'role' => 'required|in:hotel_admin,vehicle_admin,sub_admin,user,agents',
             ]);
 
             if ($validator->fails()) {
@@ -197,4 +197,83 @@ class AuthService
             ];
         }
     }
+
+    public function updateAdminUser($id, array $data): array
+    {
+        try {
+
+            $user = User::find($id);
+
+            if (!$user) {
+                return [
+                    'status' => false,
+                    'message' => 'User not found',
+                    'code' => 404
+                ];
+            }
+
+            $validator = Validator::make($data, [
+                'name' => 'sometimes|required|string|max:255',
+                'email' => 'sometimes|nullable|email|max:255|unique:users,email,' . $id,
+                'phone' => 'sometimes|nullable|string|max:20|unique:users,phone,' . $id,
+                'password' => 'sometimes|nullable|string|min:8',
+                'role' => 'sometimes|required|in:hotel_admin,vehicle_admin,sub_admin,user,agents',
+                'is_active' => 'sometimes|required|boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return [
+                    'status' => false,
+                    'message' => $validator->errors()->first(),
+                    'code' => 422
+                ];
+            }
+
+            $validated = $validator->validated();
+
+            if (array_key_exists('name', $validated)) {
+                $user->name = $validated['name'];
+            }
+
+            if (array_key_exists('email', $validated)) {
+                $user->email = $validated['email'];
+            }
+
+            if (array_key_exists('phone', $validated)) {
+                $user->phone = $validated['phone'];
+            }
+
+            if (array_key_exists('role', $validated)) {
+                $user->role = $validated['role'];
+            }
+
+            if (array_key_exists('is_active', $validated)) {
+                $user->is_active = $validated['is_active'];
+            }
+
+            if (!empty($validated['password'])) {
+                $user->password = Hash::make($validated['password']);
+            }
+
+            $user->save();
+
+            return [
+                'status' => true,
+                'message' => 'User updated successfully',
+                'data' => [
+                    'user' => $user,
+                ],
+                'code' => 200
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+                'code' => 500
+            ];
+        }
+    }
+
+    
 }
