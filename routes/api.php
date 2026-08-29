@@ -3,6 +3,10 @@
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BookingController\BookingController;
+use App\Http\Controllers\Location\CityController;
+use App\Http\Controllers\Location\CountryController;
+use App\Http\Controllers\Location\StateController;
 use App\Http\Controllers\PropAmenityConfig\PropertyAmenityConfigController;
 use App\Http\Controllers\Property\PropertyController;
 use App\Http\Controllers\RoomConfiguration\RoomConfigurationController;
@@ -10,6 +14,10 @@ use App\Http\Controllers\RoomType\RoomController;
 use App\Http\Middleware\CheckAdmin;
 use App\Http\Middleware\HotelAdminCheck;
 use Illuminate\Support\Facades\Route;
+
+
+
+
 
 
 
@@ -32,6 +40,26 @@ Route::prefix('admin')
         Route::post('/users', [AdminUserController::class, 'store']);
         Route::put('/users/{id}', [AdminUserController::class, 'update']);
         Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
+        
+        
+        Route::post('/countries', [CountryController::class, 'store']);
+        Route::patch('/countries/{id}', [CountryController::class, 'update']);
+        Route::get('/countries', [CountryController::class, 'index']);
+
+        Route::post('/states', [StateController::class, 'store']);
+        Route::patch('/states/{id}', [StateController::class, 'update']);
+        Route::get('/states', [StateController::class, 'index']);
+
+        Route::post('/cities', [CityController::class, 'store']);
+        Route::patch('/cities/{id}', [CityController::class, 'update']);
+        Route::get('/cities', [CityController::class, 'index']);
+
+
+        Route::post('/bookings', [BookingController::class, 'store']);
+        Route::patch('/bookings/{id}', [BookingController::class, 'update']);
+
+        Route::post('/rooms', [RoomController::class, 'store']);
+        Route::patch('/rooms/{id}', [RoomController::class, 'update']);
     });
 
 

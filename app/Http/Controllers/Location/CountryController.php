@@ -130,4 +130,26 @@ class CountryController extends Controller
             ], 500);
         }
     }
+
+    public function index()
+    {
+        try {
+            $countries = Country::latest()->paginate(15);
+
+            return response()->json([
+                'status' => true,
+                'data' => $countries,
+            ]);
+
+        } catch (Throwable $e) {
+            Log::error('Failed to fetch countries', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch countries.',
+            ], 500);
+        }
+    }
 }

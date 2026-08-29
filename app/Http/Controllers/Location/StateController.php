@@ -130,4 +130,35 @@ class StateController extends Controller
             ], 500);
         }
     }
+
+    public function index(Request $request)
+    {
+        try {
+            $query = State::query();
+
+            if ($request->filled('country_id')) {
+                $query->where(
+                    'country_id',
+                    $request->integer('country_id')
+                );
+            }
+
+            $states = $query->latest()->paginate(15);
+
+            return response()->json([
+                'status' => true,
+                'data' => $states,
+            ], 200);
+
+        } catch (Throwable $e) {
+            Log::error('Failed to fetch states', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch states.',
+            ], 500);
+        }
+    }
 }

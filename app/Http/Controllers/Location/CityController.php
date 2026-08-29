@@ -130,4 +130,35 @@ class CityController extends Controller
             ], 500);
         }
     }
+
+    public function index(Request $request)
+    {
+        try {
+            $query = City::query();
+
+            if ($request->filled('state_id')) {
+                $query->where(
+                    'state_id',
+                    $request->integer('state_id')
+                );
+            }
+
+            $cities = $query->latest()->paginate(15);
+
+            return response()->json([
+                'status' => true,
+                'data' => $cities,
+            ], 200);
+
+        } catch (Throwable $e) {
+            Log::error('Failed to fetch cities', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch cities.',
+            ], 500);
+        }
+    }
 }
