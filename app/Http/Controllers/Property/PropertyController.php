@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -14,6 +15,13 @@ class PropertyController extends Controller
     protected function propertyRules(): array
     {
         return [
+            'hotel_admin_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')
+                    ->where(fn ($query) => $query->where('role', 'hotel_admin')),
+            ],
+
             'name' => 'required|string|max:255',
             'type' => 'required|string|max:255',
             'star_rating' => 'nullable|integer|min:1|max:5',
@@ -41,6 +49,13 @@ class PropertyController extends Controller
     protected function propertyUpdateRules(): array
     {
         return [
+            'hotel_admin_id' => [
+                'sometimes',
+                'integer',
+                Rule::exists('users', 'id')
+                    ->where(fn ($query) => $query->where('role', 'hotel_admin')),
+            ],
+
             'name' => 'sometimes|string|max:255',
             'type' => 'sometimes|string|max:255',
             'star_rating' => 'sometimes|nullable|integer|min:1|max:5',
@@ -70,7 +85,10 @@ class PropertyController extends Controller
         try {
             $validated = $request->validate($this->propertyRules());
 
-            $existingProperty = Property::where('phone', $validated['phone'])->first();
+            $existingProperty = Property::where(
+                'phone',
+                $validated['phone']
+            )->first();
 
             if ($existingProperty) {
                 return response()->json([
@@ -118,7 +136,9 @@ class PropertyController extends Controller
                 ], 404);
             }
 
-            $validated = $request->validate($this->propertyUpdateRules());
+            $validated = $request->validate(
+                $this->propertyUpdateRules()
+            );
 
             $property->update($validated);
 
@@ -147,57 +167,4 @@ class PropertyController extends Controller
             ], 500);
         }
     }
-
-    // public function show($id)
-    // {
-    //     try {
-    //         $property = Property::find($id);
-
-    //         if (!$property) {
-    //             return response()->json([
-    //                 'status' => false,
-    //                 'message' => 'Property not found.',
-    //             ], 404);
-    //         }
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'data' => $property,
-    //         ], 200);
-
-    //     } catch (Throwable $e) {
-    //         Log::error('Failed to fetch property', [
-    //             'property_id' => $id,
-    //             'error' => $e->getMessage(),
-    //         ]);
-
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Failed to fetch property.',
-    //         ], 500);
-    //     }
-    // }
-
-    // public function index()
-    // {
-    //     try {
-    //         $properties = Property::latest()->get();
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'data' => $properties,
-    //         ], 200);
-
-    //     } catch (Throwable $e) {
-    //         Log::error('Failed to fetch properties', [
-    //             'error' => $e->getMessage(),
-    //         ]);
-
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Failed to fetch properties.',
-    //         ], 500);
-    //     }
-    // }
-
 }

@@ -51,4 +51,9 @@ class User extends Authenticatable
             'is_active' => 'boolean',
         ];
     }
+
+    public function properties()
+    {
+        return $this->hasMany(Property::class, 'hotel_admin_id');
+    }
 }

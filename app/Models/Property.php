@@ -10,6 +10,7 @@ class Property extends Model
     use HasFactory;
 
     protected $fillable = [
+        'hotel_admin_id',
         'name',
         'type',
         'star_rating',
@@ -46,5 +47,10 @@ class Property extends Model
     public function roomTypes()
     {
         return $this->hasMany(RoomType::class);
+    }
+
+    public function hotelAdmin()
+    {
+        return $this->belongsTo(User::class, 'hotel_admin_id');
     }
 }

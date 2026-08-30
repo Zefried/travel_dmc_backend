@@ -14,9 +14,9 @@ return new class extends Migration
        Schema::create('properties', function (Blueprint $table) {
             $table->id();
 
-            $table->string('name')->nullable()->index();
-            $table->string('type')->nullable();
-            $table->unsignedTinyInteger('star_rating')->nullable();  
+            $table->foreignId('hotel_admin_id')
+                ->constrained('users')
+                ->restrictOnDelete();
 
             $table->foreignId('country_id')
                 ->constrained()
@@ -30,6 +30,10 @@ return new class extends Migration
             $table->foreignId('city_id')
                 ->constrained()
                 ->cascadeOnDelete();
+
+            $table->string('name')->nullable()->index();
+            $table->string('type')->nullable();
+            $table->unsignedTinyInteger('star_rating')->nullable();  
 
             $table->text('description')->nullable();
 

@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Mockery\Matcher\AnyArgs;
 
 class AdminUserController extends Controller
 {
@@ -36,6 +34,39 @@ class AdminUserController extends Controller
             'message' => $result['message'],
             'data' => $result['data'] ?? null,
         ], $result['code']);
+    }
+
+    public function searchHotelAdmins(Request $request)
+    {
+        $query = $request->query('query');
+
+        if (!$query || strlen($query) < 3) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Please enter at least 3 characters to search.',
+            ], 422);
+        }
+
+        $users = User::query()
+            ->where('role', 'hotel_admin')
+            ->where(function ($q) use ($query) {
+                $q->where('email', 'like', $query . '%')
+                ->orWhere('phone', 'like', $query . '%');
+            })
+            ->select([
+                'id',
+                'name',
+                'email',
+                'phone',
+                'role',
+            ])
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $users,
+        ], 200);
     }
 
    

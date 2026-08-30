@@ -40,7 +40,7 @@ Route::prefix('admin')
         Route::post('/users', [AdminUserController::class, 'store']);
         Route::put('/users/{id}', [AdminUserController::class, 'update']);
         Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
-        
+        Route::get('/hotel-admins/search', [AdminUserController::class, 'searchHotelAdmins']);
         
         Route::post('/countries', [CountryController::class, 'store']);
         Route::patch('/countries/{id}', [CountryController::class, 'update']);
