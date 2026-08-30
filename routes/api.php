@@ -3,7 +3,7 @@
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\BookingController\BookingController;
+// use App\Http\Controllers\BookingController\BookingController;
 use App\Http\Controllers\Location\CityController;
 use App\Http\Controllers\Location\CountryController;
 use App\Http\Controllers\Location\StateController;
@@ -47,8 +47,8 @@ Route::prefix('admin')
         Route::get('/cities', [CityController::class, 'index']);
 
 
-        Route::post('/bookings', [BookingController::class, 'store']);
-        Route::patch('/bookings/{id}', [BookingController::class, 'update']);
+        // Route::post('/bookings', [BookingController::class, 'store']);
+        // Route::patch('/bookings/{id}', [BookingController::class, 'update']);
 
         Route::post('/rooms', [RoomController::class, 'store']);
         Route::patch('/rooms/{id}', [RoomController::class, 'update']);
@@ -62,7 +62,7 @@ Route::prefix('hotel')
 
         Route::post('/properties', [PropertyController::class, 'store']);
         Route::patch('/properties/{id}', [PropertyController::class, 'update']);
-        Route::get('/properties/room-types', [PropertyController::class, 'propertiesForRoomType']);        Route::get('/properties/{id}', [PropertyController::class, 'show']);
+        Route::get('/properties/room-types', [PropertyController::class, 'propertiesForRoomType']);       
       
         Route::post('/room-types', [RoomTypeController::class, 'store']);
         Route::patch('/room-types/{id}', [RoomTypeController::class, 'update']);
@@ -72,7 +72,13 @@ Route::prefix('hotel')
 
         Route::post('/amenities', [AmenityController::class, 'store']);
         Route::patch('/amenities/{id}', [AmenityController::class, 'update']);
+        Route::get('/amenities', [AmenityController::class, 'index']);
+
+        Route::get('/properties/for-amenities', [PropertyController::class, 'propertiesForAmenities']);
+        Route::get('/room-types/for-amenities', [PropertyController::class, 'roomTypesForAmenities']);
 
         Route::post('/amenity-configs', [PropertyAmenityConfigController::class, 'store']);
         Route::patch('/amenity-configs/{id}', [PropertyAmenityConfigController::class, 'update']);
+        Route::get('/properties/{id}/amenities', [PropertyAmenityConfigController::class, 'existingPropertyAmenities']);
+        
     });

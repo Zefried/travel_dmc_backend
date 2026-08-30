@@ -13,7 +13,9 @@ class PropertyAmenityConfig extends Model
         'property_id',
         'property_amenity_id',
     ];
+
+    public function propertyAmenity()
+    {
+        return $this->belongsTo(PropertyAmenity::class);
+    }
 }
-
-
-

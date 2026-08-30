@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
 use App\Models\Property;
+use App\Models\RoomType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -168,6 +169,7 @@ class PropertyController extends Controller
         }
     }
 
+    // using property_id in roomType table
     public function propertiesForRoomType(Request $request)
     {
         try {
@@ -216,6 +218,115 @@ class PropertyController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to search properties.',
+            ], 500);
+        }
+    }
+
+    // using property_id to assign amenities to a property
+    public function propertiesForAmenities(Request $request)
+    {
+        try {
+            $query = trim($request->query('query', ''));
+
+            if (strlen($query) < 3) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please enter at least 3 characters to search.',
+                ], 422);
+            }
+
+            $properties = Property::with([
+                'country:id,name',
+                'city:id,name',
+                'hotelAdmin:id,name,phone,email',
+            ])
+            ->where('status', 'active')
+            ->where(function ($queryBuilder) use ($query) {
+
+                $queryBuilder
+                    ->where('name', 'like', $query . '%')
+                    ->orWhereHas('hotelAdmin', function ($adminQuery) use ($query) {
+
+                        $adminQuery
+                            ->where('phone', 'like', $query . '%')
+                            ->orWhere('email', 'like', $query . '%');
+
+                    });
+            })
+            ->latest()
+            ->limit(10)
+            ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $properties,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to search properties for amenities', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to search properties.',
+            ], 500);
+        }
+    }
+
+     // using room type ID to assign amenities to a room type
+    public function roomTypesForAmenities(Request $request)
+    {
+        try {
+            $query = trim($request->query('query', ''));
+
+            if (strlen($query) < 3) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please enter at least 3 characters to search.',
+                ], 422);
+            }
+
+            $roomTypes = RoomType::with([
+                'property:id,name,country_id,city_id',
+                'property.country:id,name',
+                'property.city:id,name',
+                'property.hotelAdmin:id,name,phone,email',
+            ])
+            ->where(function ($queryBuilder) use ($query) {
+
+                $queryBuilder
+                    ->where('name', 'like', $query . '%')
+                    ->orWhereHas('property', function ($propertyQuery) use ($query) {
+
+                        $propertyQuery->where(
+                            'name',
+                            'like',
+                            $query . '%'
+                        );
+
+                    });
+
+            })
+            ->latest()
+            ->limit(10)
+            ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $roomTypes,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to search room types for amenities', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to search room types.',
             ], 500);
         }
     }

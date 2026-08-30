@@ -132,4 +132,26 @@ class AmenityController extends Controller
             ], 500);
         }
     }
+
+    public function index()
+    {
+        try {
+            $amenities = PropertyAmenity::latest()->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $amenities,
+            ], 200);
+
+        } catch (Throwable $e) {
+            Log::error('Failed to fetch amenities', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch amenities.',
+            ], 500);
+        }
+    }
 }
