@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class PropertyController extends Controller
@@ -327,6 +328,76 @@ class PropertyController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to search room types.',
+            ], 500);
+        }
+    }
+
+    // using property_id to find room types for room configuration.
+    public function propertiesForRoomConfiguration(Request $request)
+    {
+        try {
+
+            $query = trim($request->query('query', ''));
+
+            if (strlen($query) < 3) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please enter at least 3 characters to search.',
+                ], 422);
+            }
+
+            $user = Auth::user();
+
+            $properties = Property::with([
+                'country:id,name',
+                'city:id,name',
+                'hotelAdmin:id,name,phone',
+            ])
+            ->where('status', 'active')
+            ->where(function ($queryBuilder) use ($query) {
+
+                $queryBuilder
+                    ->where('name', 'like', $query . '%')
+                    ->orWhereHas('hotelAdmin', function ($adminQuery) use ($query) {
+
+                        $adminQuery
+                            ->where('phone', 'like', $query . '%')
+                            ->orWhere('email', 'like', $query . '%');
+
+                    });
+
+            });
+
+
+            if ($user->role === 'hotel_admin') {
+
+                $properties->where(
+                    'hotel_admin_id',
+                    $user->id
+                );
+            }
+
+
+            $properties = $properties
+                ->latest()
+                ->limit(10)
+                ->get();
+
+
+            return response()->json([
+                'status' => true,
+                'data' => $properties,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to search properties for room configuration', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to search properties.',
             ], 500);
         }
     }

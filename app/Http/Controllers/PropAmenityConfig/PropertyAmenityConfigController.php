@@ -15,27 +15,27 @@ class PropertyAmenityConfigController extends Controller
     protected function propertyAmenityConfigRules(): array
     {
         return [
-            'property_id' => 'required|integer|exists:properties,id',
+            'target_type' => 'required|in:property,room_type',
 
-            'property_amenity_ids' => [
-                'required',
-                'array',
-                'min:1',
-            ],
+            'property_id' => 'nullable|integer|exists:properties,id',
 
-            'property_amenity_ids.*' => [
-                'required',
-                'integer',
-                'distinct',
-                'exists:property_amenities,id',
-            ],
+            'room_type_id' => 'nullable|integer|exists:room_types,id',
+
+            'property_amenity_ids' => 'required|array|min:1',
+
+            'property_amenity_ids.*' =>
+                'required|integer|distinct|exists:property_amenities,id',
         ];
     }
 
     protected function propertyAmenityConfigUpdateRules(): array
     {
         return [
-            'property_id' => 'sometimes|integer|exists:properties,id',
+            'target_type' => 'required|in:property,room_type',
+
+            'property_id' => 'nullable|integer|exists:properties,id',
+
+            'room_type_id' => 'nullable|integer|exists:room_types,id',
 
             'property_amenity_id' => [
                 'sometimes',
@@ -54,70 +54,77 @@ class PropertyAmenityConfigController extends Controller
                 $this->propertyAmenityConfigRules()
             );
 
-            $propertyId = $validated['property_id'];
+            $targetType = $validated['target_type'];
+
+            $targetColumn = $targetType === 'property'
+                ? 'property_id'
+                : 'room_type_id';
+
+            $targetId = $validated[$targetColumn] ?? null;
+
+            if (!$targetId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "{$targetColumn} is required.",
+                ], 422);
+            }
+
             $amenityIds = $validated['property_amenity_ids'];
 
 
-            $existingAmenityIds = PropertyAmenityConfig::where(
-                'property_id',
-                $propertyId
-            )
-                ->whereIn(
-                    'property_amenity_id',
-                    $amenityIds
-                )
-                ->pluck('property_amenity_id')
-                ->toArray();
-
-
-            if (!empty($existingAmenityIds)) {
-
-                return response()->json([
-                    'status' => false,
-                    'message' => 'One or more amenities are already assigned to this property.',
-                    'existing_amenity_ids' => $existingAmenityIds,
-                ], 409);
-            }
-
-
-            $configs = DB::transaction(function () use (
-                $propertyId,
+            DB::transaction(function () use (
+                $targetColumn,
+                $targetId,
+                $targetType,
                 $amenityIds
             ) {
 
-                $data = [];
+                $query = PropertyAmenityConfig::where(
+                    $targetColumn,
+                    $targetId
+                );
 
-                foreach ($amenityIds as $amenityId) {
 
-                    $data[] = [
-                        'property_id' => $propertyId,
+                $existingAmenityIds = $query
+                    ->pluck('property_amenity_id')
+                    ->toArray();
+
+
+                $query->whereNotIn(
+                    'property_amenity_id',
+                    $amenityIds
+                )->delete();
+
+
+                $newAmenityIds = array_diff(
+                    $amenityIds,
+                    $existingAmenityIds
+                );
+
+
+                foreach ($newAmenityIds as $amenityId) {
+
+                    PropertyAmenityConfig::create([
+                        'property_id' =>
+                            $targetType === 'property'
+                                ? $targetId
+                                : null,
+
+                        'room_type_id' =>
+                            $targetType === 'room_type'
+                                ? $targetId
+                                : null,
+
                         'property_amenity_id' => $amenityId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
+                    ]);
                 }
-
-
-                PropertyAmenityConfig::insert($data);
-
-
-                return PropertyAmenityConfig::where(
-                    'property_id',
-                    $propertyId
-                )
-                    ->whereIn(
-                        'property_amenity_id',
-                        $amenityIds
-                    )
-                    ->get();
             });
 
 
             return response()->json([
                 'status' => true,
-                'message' => 'Property amenities assigned successfully.',
-                'data' => $configs,
-            ], 201);
+                'message' => 'Amenities saved successfully.',
+            ], 200);
 
 
         } catch (ValidationException $e) {
@@ -131,17 +138,14 @@ class PropertyAmenityConfigController extends Controller
 
         } catch (Throwable $e) {
 
-            Log::error(
-                'Failed to assign property amenities',
-                [
-                    'error' => $e->getMessage(),
-                ]
-            );
-
+            Log::error('Failed to save amenities', [
+                'error' => $e->getMessage(),
+            ]);
 
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to assign property amenities.',
+                'message' => 'Failed to save amenities.',
+                'errors' => $e->getMessage(),
             ], 500);
         }
     }
@@ -153,12 +157,10 @@ class PropertyAmenityConfigController extends Controller
 
             $config = PropertyAmenityConfig::find($id);
 
-
             if (!$config) {
-
                 return response()->json([
                     'status' => false,
-                    'message' => 'Property amenity configuration not found.',
+                    'message' => 'Amenity configuration not found.',
                 ], 404);
             }
 
@@ -168,9 +170,36 @@ class PropertyAmenityConfigController extends Controller
             );
 
 
-            $propertyId =
-                $validated['property_id']
-                ?? $config->property_id;
+            $targetType = $validated['target_type'];
+
+            if ($targetType === 'property') {
+
+                $targetId = $validated['property_id'] ?? null;
+
+                if (!$targetId) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Property ID is required.',
+                    ], 422);
+                }
+
+                $propertyId = $targetId;
+                $roomTypeId = null;
+
+            } else {
+
+                $targetId = $validated['room_type_id'] ?? null;
+
+                if (!$targetId) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Room Type ID is required.',
+                    ], 422);
+                }
+
+                $propertyId = null;
+                $roomTypeId = $targetId;
+            }
 
 
             $propertyAmenityId =
@@ -178,33 +207,44 @@ class PropertyAmenityConfigController extends Controller
                 ?? $config->property_amenity_id;
 
 
-            $existingConfig = PropertyAmenityConfig::where(
-                'property_id',
-                $propertyId
+            $exists = PropertyAmenityConfig::where(
+                'property_amenity_id',
+                $propertyAmenityId
             )
-                ->where(
-                    'property_amenity_id',
-                    $propertyAmenityId
-                )
                 ->where('id', '!=', $config->id)
-                ->first();
+                ->where(function ($query) use (
+                    $propertyId,
+                    $roomTypeId
+                ) {
+
+                    if ($propertyId) {
+                        $query->where('property_id', $propertyId);
+                    } else {
+                        $query->where('room_type_id', $roomTypeId);
+                    }
+
+                })
+                ->exists();
 
 
-            if ($existingConfig) {
-
+            if ($exists) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'This amenity is already assigned to this property.',
+                    'message' => 'This amenity is already assigned to this target.',
                 ], 409);
             }
 
 
-            $config->update($validated);
+            $config->update([
+                'property_id' => $propertyId,
+                'room_type_id' => $roomTypeId,
+                'property_amenity_id' => $propertyAmenityId,
+            ]);
 
 
             return response()->json([
                 'status' => true,
-                'message' => 'Property amenity updated successfully.',
+                'message' => 'Amenity configuration updated successfully.',
                 'data' => $config->fresh(),
             ], 200);
 
@@ -220,18 +260,14 @@ class PropertyAmenityConfigController extends Controller
 
         } catch (Throwable $e) {
 
-            Log::error(
-                'Failed to update property amenity',
-                [
-                    'property_amenity_config_id' => $id,
-                    'error' => $e->getMessage(),
-                ]
-            );
-
+            Log::error('Failed to update amenity configuration', [
+                'property_amenity_config_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
 
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update property amenity.',
+                'message' => 'Failed to update amenity configuration.',
             ], 500);
         }
     }
@@ -240,13 +276,26 @@ class PropertyAmenityConfigController extends Controller
     {
         try {
 
-            $amenities = PropertyAmenityConfig::where(
+            $configs = PropertyAmenityConfig::where(
                 'property_id',
                 $id
             )
                 ->with('propertyAmenity')
-                ->get()
-                ->pluck('propertyAmenity');
+                ->get();
+
+            $amenities = $configs->map(function ($config) {
+
+                return [
+                    'config_id' => $config->id,
+                    'id' => $config->propertyAmenity->id,
+                    'category' => $config->propertyAmenity->category,
+                    'name' => $config->propertyAmenity->name,
+                    'description' => $config->propertyAmenity->description,
+                    'status' => $config->propertyAmenity->status,
+                ];
+
+            })->values();
+
 
             return response()->json([
                 'status' => true,
@@ -263,6 +312,84 @@ class PropertyAmenityConfigController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch property amenities.',
+            ], 500);
+        }
+    }
+
+    public function existingRoomTypeAmenities($id)
+    {
+        try {
+
+            $configs = PropertyAmenityConfig::where(
+                'room_type_id',
+                $id
+            )
+                ->with('propertyAmenity')
+                ->get();
+
+            $amenities = $configs->map(function ($config) {
+
+                return [
+                    'config_id' => $config->id,
+                    'id' => $config->propertyAmenity->id,
+                    'category' => $config->propertyAmenity->category,
+                    'name' => $config->propertyAmenity->name,
+                    'description' => $config->propertyAmenity->description,
+                    'status' => $config->propertyAmenity->status,
+                ];
+
+            })->values();
+
+
+            return response()->json([
+                'status' => true,
+                'data' => $amenities,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch existing room type amenities', [
+                'room_type_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch room type amenities.',
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+
+            $config = PropertyAmenityConfig::find($id);
+
+            if (!$config) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Amenity assignment not found.',
+                ], 404);
+            }
+
+            $config->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Amenity removed successfully.',
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to remove amenity assignment', [
+                'amenity_config_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to remove amenity.',
             ], 500);
         }
     }

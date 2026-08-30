@@ -11,6 +11,7 @@ class PropertyAmenityConfig extends Model
 
     protected $fillable = [
         'property_id',
+        'room_type_id',
         'property_amenity_id',
     ];
 

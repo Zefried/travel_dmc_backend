@@ -15,6 +15,12 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('property_id')
+                ->nullable()
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('room_type_id')
+                ->nullable()
                 ->constrained()
                 ->cascadeOnDelete();
 

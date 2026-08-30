@@ -7,6 +7,7 @@ use App\Models\RoomType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class RoomTypeController extends Controller
@@ -159,6 +160,34 @@ class RoomTypeController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update room type.',
+            ], 500);
+        }
+    }
+
+    public function roomTypesForConfiguration($id)
+    {
+        try {
+
+            $roomTypes = RoomType::where('property_id', $id)
+                ->where('status', 'active')
+                ->latest()
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $roomTypes,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch room types for room configuration', [
+                'property_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch room types.',
             ], 500);
         }
     }

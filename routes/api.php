@@ -67,9 +67,6 @@ Route::prefix('hotel')
         Route::post('/room-types', [RoomTypeController::class, 'store']);
         Route::patch('/room-types/{id}', [RoomTypeController::class, 'update']);
 
-        Route::post('/room-configurations', [RoomConfigurationController::class, 'store']);
-        Route::patch('/room-configurations/{id}', [RoomConfigurationController::class, 'update']);
-
         Route::post('/amenities', [AmenityController::class, 'store']);
         Route::patch('/amenities/{id}', [AmenityController::class, 'update']);
         Route::get('/amenities', [AmenityController::class, 'index']);
@@ -80,5 +77,13 @@ Route::prefix('hotel')
         Route::post('/amenity-configs', [PropertyAmenityConfigController::class, 'store']);
         Route::patch('/amenity-configs/{id}', [PropertyAmenityConfigController::class, 'update']);
         Route::get('/properties/{id}/amenities', [PropertyAmenityConfigController::class, 'existingPropertyAmenities']);
+        // using the same controller to get existing amenities for a room type
+        Route::get('/room-types/{id}/amenities',[PropertyAmenityConfigController::class, 'existingRoomTypeAmenities']);
+        Route::delete('/amenity-configs/{id}', [PropertyAmenityConfigController::class, 'destroy']);
+
+        Route::post('/room-configurations', [RoomConfigurationController::class, 'store']);
+        Route::patch('/room-configurations/{id}', [RoomConfigurationController::class, 'update']);
+        Route::get('/properties/for-room-configuration', [PropertyController::class, 'propertiesForRoomConfiguration']);
+        Route::get('/properties/{id}/room-types/for-configuration',[RoomTypeController::class, 'roomTypesForConfiguration']);
         
     });
