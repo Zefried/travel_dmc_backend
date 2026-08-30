@@ -10,19 +10,11 @@ use App\Http\Controllers\Location\StateController;
 use App\Http\Controllers\PropAmenityConfig\PropertyAmenityConfigController;
 use App\Http\Controllers\Property\PropertyController;
 use App\Http\Controllers\RoomConfiguration\RoomConfigurationController;
-use App\Http\Controllers\RoomType\RoomController;
+use App\Http\Controllers\Rooms\RoomController;
+use App\Http\Controllers\RoomType\RoomTypeController;
 use App\Http\Middleware\CheckAdmin;
 use App\Http\Middleware\HotelAdminCheck;
 use Illuminate\Support\Facades\Route;
-
-
-
-
-
-
-
-
-
 
 
 
@@ -60,6 +52,7 @@ Route::prefix('admin')
 
         Route::post('/rooms', [RoomController::class, 'store']);
         Route::patch('/rooms/{id}', [RoomController::class, 'update']);
+        Route::get('/room-types/for-rooms', [RoomController::class, 'roomTypesForRooms']);
     });
 
 
@@ -69,11 +62,10 @@ Route::prefix('hotel')
 
         Route::post('/properties', [PropertyController::class, 'store']);
         Route::patch('/properties/{id}', [PropertyController::class, 'update']);
-        Route::get('/properties', [PropertyController::class, 'index']);
-        Route::get('/properties/{id}', [PropertyController::class, 'show']);
+        Route::get('/properties/room-types', [PropertyController::class, 'propertiesForRoomType']);        Route::get('/properties/{id}', [PropertyController::class, 'show']);
       
-        Route::post('/room-types', [RoomController::class, 'store']);
-        Route::patch('/room-types/{id}', [RoomController::class, 'update']);
+        Route::post('/room-types', [RoomTypeController::class, 'store']);
+        Route::patch('/room-types/{id}', [RoomTypeController::class, 'update']);
 
         Route::post('/room-configurations', [RoomConfigurationController::class, 'store']);
         Route::patch('/room-configurations/{id}', [RoomConfigurationController::class, 'update']);
