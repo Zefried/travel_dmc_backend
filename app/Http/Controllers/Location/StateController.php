@@ -143,7 +143,18 @@ class StateController extends Controller
                 );
             }
 
-            $states = $query->latest()->paginate(15);
+            if ($request->filled('search')) {
+                $query->where(
+                    'name',
+                    'like',
+                    '%' . $request->input('search') . '%'
+                );
+            }
+
+            $states = $query
+                ->with('country')
+                ->latest()
+                ->paginate(2);
 
             return response()->json([
                 'status' => true,
