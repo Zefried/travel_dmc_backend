@@ -41,6 +41,7 @@ Route::prefix('admin')
         Route::post('/states', [StateController::class, 'store']);
         Route::patch('/states/{id}', [StateController::class, 'update']);
         Route::get('/states', [StateController::class, 'index']);
+        Route::get('/states/options', [StateController::class, 'options']);
 
         Route::post('/cities', [CityController::class, 'store']);
         Route::patch('/cities/{id}', [CityController::class, 'update']);

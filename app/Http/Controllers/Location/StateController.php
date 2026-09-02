@@ -134,7 +134,7 @@ class StateController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = State::query();
+            $query = State::with('country');
 
             if ($request->filled('country_id')) {
                 $query->where(
@@ -144,15 +144,23 @@ class StateController extends Controller
             }
 
             if ($request->filled('search')) {
-                $query->where(
-                    'name',
-                    'like',
-                    '%' . $request->input('search') . '%'
-                );
+
+                $states = $query
+                    ->where(
+                        'name',
+                        'like',
+                        '%' . $request->input('search') . '%'
+                    )
+                    ->latest()
+                    ->get();
+
+                return response()->json([
+                    'status' => true,
+                    'data' => $states,
+                ], 200);
             }
 
             $states = $query
-                ->with('country')
                 ->latest()
                 ->paginate(2);
 
@@ -162,6 +170,7 @@ class StateController extends Controller
             ], 200);
 
         } catch (Throwable $e) {
+
             Log::error('Failed to fetch states', [
                 'error' => $e->getMessage(),
             ]);
@@ -172,4 +181,38 @@ class StateController extends Controller
             ], 500);
         }
     }
+
+    public function options(Request $request)
+{
+    try {
+        $query = State::query();
+
+        if ($request->filled('country_id')) {
+            $query->where(
+                'country_id',
+                $request->integer('country_id')
+            );
+        }
+
+        $states = $query
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $states,
+        ], 200);
+
+    } catch (Throwable $e) {
+
+        Log::error('Failed to fetch state options', [
+            'error' => $e->getMessage(),
+        ]);
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to fetch state options.',
+        ], 500);
+    }
+}
 }
