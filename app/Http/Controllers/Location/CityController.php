@@ -130,7 +130,7 @@ class CityController extends Controller
             ], 500);
         }
     }
-
+    
     public function index(Request $request)
     {
         try {
@@ -143,7 +143,34 @@ class CityController extends Controller
                 );
             }
 
-            $cities = $query->latest()->paginate(15);
+            if ($request->filled('search')) {
+
+                $search = $request->input('search');
+
+                $cities = $query
+                    ->where(function ($query) use ($search) {
+                        $query->where(
+                            'name',
+                            'like',
+                            '%' . $search . '%'
+                        )->orWhere(
+                            'code',
+                            'like',
+                            '%' . $search . '%'
+                        );
+                    })
+                    ->latest()
+                    ->get();
+
+                return response()->json([
+                    'status' => true,
+                    'data' => $cities,
+                ], 200);
+            }
+
+            $cities = $query
+                ->latest()
+                ->paginate(2);
 
             return response()->json([
                 'status' => true,
@@ -151,6 +178,7 @@ class CityController extends Controller
             ], 200);
 
         } catch (Throwable $e) {
+
             Log::error('Failed to fetch cities', [
                 'error' => $e->getMessage(),
             ]);
@@ -161,4 +189,5 @@ class CityController extends Controller
             ], 500);
         }
     }
+
 }
