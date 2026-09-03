@@ -190,4 +190,38 @@ class CityController extends Controller
         }
     }
 
+    public function options(Request $request)
+    {
+        try {
+            $query = City::query();
+
+            if ($request->filled('state_id')) {
+                $query->where(
+                    'state_id',
+                    $request->integer('state_id')
+                );
+            }
+
+            $cities = $query
+                ->orderBy('name')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $cities,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch city options', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch city options.',
+            ], 500);
+        }
+    }
+
 }

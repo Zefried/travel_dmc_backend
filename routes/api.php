@@ -33,6 +33,7 @@ Route::prefix('admin')
         Route::put('/users/{id}', [AdminUserController::class, 'update']);
         Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
         Route::get('/hotel-admins/search', [AdminUserController::class, 'searchHotelAdmins']);
+        Route::get('/hotel-admins/list', [AdminUserController::class, 'hotelAdminList']);
         
         Route::post('/countries', [CountryController::class, 'store']);
         Route::patch('/countries/{id}', [CountryController::class, 'update']);
@@ -46,6 +47,7 @@ Route::prefix('admin')
         Route::post('/cities', [CityController::class, 'store']);
         Route::patch('/cities/{id}', [CityController::class, 'update']);
         Route::get('/cities', [CityController::class, 'index']);
+        Route::get('/cities/options', [CityController::class, 'options']);
 
 
         // Route::post('/bookings', [BookingController::class, 'store']);
@@ -63,6 +65,7 @@ Route::prefix('hotel')
 
         Route::post('/properties', [PropertyController::class, 'store']);
         Route::patch('/properties/{id}', [PropertyController::class, 'update']);
+        Route::get('/properties/options', [PropertyController::class, 'options']);
         Route::get('/properties/room-types', [PropertyController::class, 'propertiesForRoomType']);       
       
         Route::post('/room-types', [RoomTypeController::class, 'store']);

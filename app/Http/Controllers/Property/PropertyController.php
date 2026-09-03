@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
+use App\Models\City;
+use App\Models\Country;
 use App\Models\Property;
 use App\Models\RoomType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class PropertyController extends Controller
@@ -166,6 +168,64 @@ class PropertyController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update property.',
+            ], 500);
+        }
+    }
+
+    public function options(Request $request)
+    {
+        try {
+            $query = Property::query();
+
+            if ($request->filled('hotel_admin_id')) {
+                $query->where(
+                    'hotel_admin_id',
+                    $request->integer('hotel_admin_id')
+                );
+            }
+
+            $properties = $query
+                ->orderBy('name')
+                ->get();
+
+            $countryIds = $properties
+                ->pluck('country_id')
+                ->filter()
+                ->unique()
+                ->values();
+
+            $cityIds = $properties
+                ->pluck('city_id')
+                ->filter()
+                ->unique()
+                ->values();
+
+            $countries = Country::whereIn('id', $countryIds)
+                ->select('id', 'name')
+                ->get();
+
+            $cities = City::whereIn('id', $cityIds)
+                ->select('id', 'name')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $properties,
+                'location_data' => [
+                    'countries' => $countries,
+                    'cities' => $cities,
+                ],
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch property options', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch property options.',
             ], 500);
         }
     }

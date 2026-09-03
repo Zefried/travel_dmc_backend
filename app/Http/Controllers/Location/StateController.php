@@ -183,36 +183,36 @@ class StateController extends Controller
     }
 
     public function options(Request $request)
-{
-    try {
-        $query = State::query();
+    {
+        try {
+            $query = State::query();
 
-        if ($request->filled('country_id')) {
-            $query->where(
-                'country_id',
-                $request->integer('country_id')
-            );
+            if ($request->filled('country_id')) {
+                $query->where(
+                    'country_id',
+                    $request->integer('country_id')
+                );
+            }
+
+            $states = $query
+                ->orderBy('name')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $states,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch state options', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch state options.',
+            ], 500);
         }
-
-        $states = $query
-            ->orderBy('name')
-            ->get();
-
-        return response()->json([
-            'status' => true,
-            'data' => $states,
-        ], 200);
-
-    } catch (Throwable $e) {
-
-        Log::error('Failed to fetch state options', [
-            'error' => $e->getMessage(),
-        ]);
-
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to fetch state options.',
-        ], 500);
     }
-}
 }

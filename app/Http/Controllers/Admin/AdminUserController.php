@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class AdminUserController extends Controller
 {
@@ -67,6 +69,32 @@ class AdminUserController extends Controller
             'status' => true,
             'data' => $users,
         ], 200);
+    }
+
+    public function hotelAdminList()
+    {
+        try {
+            $hotelAdmins = User::where('role', 'hotel_admin')
+                ->select('id', 'name', 'phone', 'email')
+                ->orderBy('name')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $hotelAdmins,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch hotel admin list', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch hotel admin list.',
+            ], 500);
+        }
     }
 
    
