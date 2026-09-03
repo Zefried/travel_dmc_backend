@@ -67,9 +67,14 @@ Route::prefix('hotel')
         Route::patch('/properties/{id}', [PropertyController::class, 'update']);
         Route::get('/properties/options', [PropertyController::class, 'options']);
         Route::get('/properties/room-types', [PropertyController::class, 'propertiesForRoomType']);       
+        Route::get('/properties/{id}', [PropertyController::class, 'show']);
+   
+        
       
         Route::post('/room-types', [RoomTypeController::class, 'store']);
         Route::patch('/room-types/{id}', [RoomTypeController::class, 'update']);
+        Route::get('/room-types/list', [RoomTypeController::class, 'list']);
+        Route::get('/room-types/{id}', [RoomTypeController::class, 'show']);
 
         Route::post('/amenities', [AmenityController::class, 'store']);
         Route::patch('/amenities/{id}', [AmenityController::class, 'update']);

@@ -172,6 +172,42 @@ class PropertyController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $property = Property::with([
+                'country',
+                'state',
+                'city',
+            ])->find($id);
+
+            if (!$property) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Property not found.',
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => $property,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch property details', [
+                'property_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch property details.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function options(Request $request)
     {
         try {
