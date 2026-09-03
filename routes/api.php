@@ -15,6 +15,7 @@ use App\Http\Controllers\RoomType\RoomTypeController;
 use App\Http\Controllers\Vehicle\VehicleController;
 use App\Http\Middleware\CheckAdmin;
 use App\Http\Middleware\HotelAdminCheck;
+use App\Http\Middleware\VehicleAdminCheck;
 use Illuminate\Support\Facades\Route;
 
 
@@ -36,6 +37,7 @@ Route::prefix('admin')
         Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
         Route::get('/hotel-admins/search', [AdminUserController::class, 'searchHotelAdmins']);
         Route::get('/hotel-admins/list', [AdminUserController::class, 'hotelAdminList']);
+        Route::get('/vehicle-admins/list',[AdminUserController::class, 'vehicleAdminList']);
         
         Route::post('/countries', [CountryController::class, 'store']);
         Route::patch('/countries/{id}', [CountryController::class, 'update']);
@@ -105,14 +107,14 @@ Route::prefix('hotel')
 
 
 Route::prefix('vehicle')
-    ->middleware(['auth:sanctum', HotelAdminCheck::class])
+    ->middleware(['auth:sanctum', VehicleAdminCheck::class])
     ->group(function () {
      
-    Route::post('/vehicle',[VehicleController::class, 'store']);
-    Route::patch('/vehicle/{id}',[VehicleController::class, 'update']);
-
+    Route::post('/',[VehicleController::class, 'store']);
+    Route::patch('/{id}',[VehicleController::class, 'update']);
     Route::get('/list',[VehicleController::class, 'list']);
 
-    Route::get('/{id}',[VehicleController::class, 'show']);
-        
+
+
+      
 });

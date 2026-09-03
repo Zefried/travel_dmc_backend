@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('vehicles', function (Blueprint $table) {
           $table->id();
 
-            $table->foreignId('hotel_admin_id')
+            $table->foreignId('vehicle_admin_id')
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete()

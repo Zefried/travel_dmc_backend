@@ -10,7 +10,7 @@ class Vehicle extends Model
     use HasFactory;
 
     protected $fillable = [
-        'hotel_admin_id',
+        'vehicle_admin_id',
         'type',
         'name',
         'model',
@@ -23,8 +23,8 @@ class Vehicle extends Model
     ];
 
 
-    public function hotelAdmin()
+    public function vehicleAdmin()
     {
-        return $this->belongsTo(User::class, 'hotel_admin_id');
+        return $this->belongsTo(User::class, 'vehicle_admin_id');
     }
 }

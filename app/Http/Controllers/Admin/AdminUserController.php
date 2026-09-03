@@ -97,5 +97,39 @@ class AdminUserController extends Controller
         }
     }
 
+    public function vehicleAdminList()
+    {
+        try {
+
+            $vehicleAdmins = User::where(
+                'role',
+                'vehicle_admin'
+            )
+                ->select(
+                    'id',
+                    'name',
+                    'phone',
+                    'email'
+                )
+                ->orderBy('name')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $vehicleAdmins,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch vehicle admins', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch vehicle admins.',
+            ], 500);
+        }
+    }
    
 }

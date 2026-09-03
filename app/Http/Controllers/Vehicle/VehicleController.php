@@ -5,20 +5,26 @@ namespace App\Http\Controllers\Vehicle;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class VehicleController extends Controller
 {
-    
     protected function vehicleRules(): array
     {
         return [
-            'type' => 'nullable|string|max:255',
-            'name' => 'nullable|string|max:255',
-            'model' => 'nullable|string|max:255',
+            'vehicle_admin_id' =>
+                'required|integer|exists:users,id',
+
+            'type' =>
+                'nullable|string|max:255',
+
+            'name' =>
+                'nullable|string|max:255',
+
+            'model' =>
+                'nullable|string|max:255',
 
             'registration_no' =>
                 'nullable|string|max:255',
@@ -44,9 +50,17 @@ class VehicleController extends Controller
     protected function vehicleUpdateRules(): array
     {
         return [
-            'type' => 'sometimes|nullable|string|max:255',
-            'name' => 'sometimes|nullable|string|max:255',
-            'model' => 'sometimes|nullable|string|max:255',
+            'vehicle_admin_id' =>
+                'sometimes|integer|exists:users,id',
+
+            'type' =>
+                'sometimes|nullable|string|max:255',
+
+            'name' =>
+                'sometimes|nullable|string|max:255',
+
+            'model' =>
+                'sometimes|nullable|string|max:255',
 
             'registration_no' =>
                 'sometimes|nullable|string|max:255',
@@ -78,16 +92,11 @@ class VehicleController extends Controller
             );
 
 
-            $hotelAdminId = Auth::id();
-
-
-            if (
-                !empty($validated['registration_no'])
-            ) {
+            if (!empty($validated['registration_no'])) {
 
                 $existingVehicle = Vehicle::where(
-                    'hotel_admin_id',
-                    $hotelAdminId
+                    'vehicle_admin_id',
+                    $validated['vehicle_admin_id']
                 )
                     ->where(
                         'registration_no',
@@ -101,16 +110,15 @@ class VehicleController extends Controller
                     return response()->json([
                         'status' => false,
                         'message' =>
-                            'This registration number already exists for this hotel admin.',
+                            'This registration number already exists for this vehicle admin.',
                     ], 409);
                 }
             }
 
 
-            $vehicle = Vehicle::create([
-                'hotel_admin_id' => $hotelAdminId,
-                ...$validated,
-            ]);
+            $vehicle = Vehicle::create(
+                $validated
+            );
 
 
             return response()->json([
@@ -134,6 +142,7 @@ class VehicleController extends Controller
             Log::error('Failed to create vehicle', [
                 'error' => $e->getMessage(),
             ]);
+
 
             return response()->json([
                 'status' => false,
@@ -164,6 +173,11 @@ class VehicleController extends Controller
             );
 
 
+            $vehicleAdminId =
+                $validated['vehicle_admin_id']
+                ?? $vehicle->vehicle_admin_id;
+
+
             $registrationNo =
                 $validated['registration_no']
                 ?? $vehicle->registration_no;
@@ -172,8 +186,8 @@ class VehicleController extends Controller
             if ($registrationNo) {
 
                 $existingVehicle = Vehicle::where(
-                    'hotel_admin_id',
-                    $vehicle->hotel_admin_id
+                    'vehicle_admin_id',
+                    $vehicleAdminId
                 )
                     ->where(
                         'registration_no',
@@ -192,7 +206,7 @@ class VehicleController extends Controller
                     return response()->json([
                         'status' => false,
                         'message' =>
-                            'This registration number already exists for this hotel admin.',
+                            'This registration number already exists for this vehicle admin.',
                     ], 409);
                 }
             }
@@ -224,9 +238,52 @@ class VehicleController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
+
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update vehicle.',
+            ], 500);
+        }
+    }
+
+
+    public function list(Request $request)
+    {
+        try {
+
+            $query = Vehicle::query();
+
+
+            if ($request->filled('vehicle_admin_id')) {
+
+                $query->where(
+                    'vehicle_admin_id',
+                    $request->integer('vehicle_admin_id')
+                );
+            }
+
+
+            $vehicles = $query
+                ->latest()
+                ->paginate(5);
+
+
+            return response()->json([
+                'status' => true,
+                'data' => $vehicles,
+            ], 200);
+
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch vehicle list', [
+                'error' => $e->getMessage(),
+            ]);
+
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch vehicle list.',
             ], 500);
         }
     }
