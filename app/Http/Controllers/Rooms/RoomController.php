@@ -53,14 +53,12 @@ class RoomController extends Controller
                 'message' => 'Room created successfully.',
                 'data' => $room,
             ], 201);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'errors' => $e->errors(),
             ], 422);
-
         } catch (Throwable $e) {
             Log::error('Failed to create room', [
                 'error' => $e->getMessage(),
@@ -109,14 +107,12 @@ class RoomController extends Controller
                 'message' => 'Room updated successfully.',
                 'data' => $room->fresh(),
             ], 200);
-
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'errors' => $e->errors(),
             ], 422);
-
         } catch (Throwable $e) {
             Log::error('Failed to update room', [
                 'room_id' => $id,
@@ -126,6 +122,39 @@ class RoomController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update room.',
+            ], 500);
+        }
+    }
+
+    public function list(Request $request)
+    {
+        try {
+            $query = Room::query();
+
+            if ($request->filled('room_type_id')) {
+                $query->where(
+                    'room_type_id',
+                    $request->integer('room_type_id')
+                );
+            }
+
+            $rooms = $query
+                ->latest()
+                ->paginate(2);
+
+            return response()->json([
+                'status' => true,
+                'data' => $rooms,
+            ], 200);
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch room list', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch room list.',
             ], 500);
         }
     }
@@ -147,30 +176,27 @@ class RoomController extends Controller
                 'property.country:id,name',
                 'property.city:id,name',
             ])
-            ->where(function ($queryBuilder) use ($query) {
+                ->where(function ($queryBuilder) use ($query) {
 
-                $queryBuilder
-                    ->where('name', 'like', $query . '%')
-                    ->orWhereHas('property', function ($propertyQuery) use ($query) {
+                    $queryBuilder
+                        ->where('name', 'like', $query . '%')
+                        ->orWhereHas('property', function ($propertyQuery) use ($query) {
 
-                        $propertyQuery->where(
-                            'name',
-                            'like',
-                            $query . '%'
-                        );
-
-                    });
-
-            })
-            ->latest()
-            ->limit(10)
-            ->get();
+                            $propertyQuery->where(
+                                'name',
+                                'like',
+                                $query . '%'
+                            );
+                        });
+                })
+                ->latest()
+                ->limit(10)
+                ->get();
 
             return response()->json([
                 'status' => true,
                 'data' => $roomTypes,
             ], 200);
-
         } catch (Throwable $e) {
 
             Log::error('Failed to search room types for rooms', [

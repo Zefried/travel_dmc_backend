@@ -198,6 +198,39 @@ class RoomTypeController extends Controller
         }
     }
 
+    public function roomTypeList(Request $request)
+    {
+        try {
+            $query = RoomType::query();
+
+            if ($request->filled('property_id')) {
+                $query->where(
+                    'property_id',
+                    $request->integer('property_id')
+                );
+            }
+
+            $roomTypes = $query
+                ->orderBy('name')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $roomTypes,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch room type list', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch room type list.',
+            ], 500);
+        }
+    }
 
     public function roomTypesForConfiguration($id)
     {

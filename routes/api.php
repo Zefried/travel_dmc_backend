@@ -55,7 +55,9 @@ Route::prefix('admin')
 
         Route::post('/rooms', [RoomController::class, 'store']);
         Route::patch('/rooms/{id}', [RoomController::class, 'update']);
-        Route::get('/room-types/for-rooms', [RoomController::class, 'roomTypesForRooms']);
+        Route::get('/room-types/for-rooms', [RoomController::class, 'roomTypesForRooms']); // search
+        Route::get('/room-types/list', [RoomTypeController::class, 'roomTypeList']); // list
+        Route::get('/rooms/list', [RoomController::class, 'list']); // room list
     });
 
 
