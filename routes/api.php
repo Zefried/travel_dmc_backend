@@ -12,9 +12,11 @@ use App\Http\Controllers\Property\PropertyController;
 use App\Http\Controllers\RoomConfiguration\RoomConfigurationController;
 use App\Http\Controllers\Rooms\RoomController;
 use App\Http\Controllers\RoomType\RoomTypeController;
+use App\Http\Controllers\Vehicle\VehicleController;
 use App\Http\Middleware\CheckAdmin;
 use App\Http\Middleware\HotelAdminCheck;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -69,14 +71,10 @@ Route::prefix('hotel')
         Route::patch('/properties/{id}', [PropertyController::class, 'update']);
         Route::get('/properties/options', [PropertyController::class, 'options']);
         Route::get('/properties/room-types', [PropertyController::class, 'propertiesForRoomType']);       
-        Route::get('/properties/{id}', [PropertyController::class, 'show']);
-   
-        
-      
+     
         Route::post('/room-types', [RoomTypeController::class, 'store']);
         Route::patch('/room-types/{id}', [RoomTypeController::class, 'update']);
         Route::get('/room-types/list', [RoomTypeController::class, 'list']);
-        Route::get('/room-types/{id}', [RoomTypeController::class, 'show']);
 
         Route::post('/amenities', [AmenityController::class, 'store']);
         Route::patch('/amenities/{id}', [AmenityController::class, 'update']);
@@ -94,7 +92,27 @@ Route::prefix('hotel')
 
         Route::post('/room-configurations', [RoomConfigurationController::class, 'store']);
         Route::patch('/room-configurations/{id}', [RoomConfigurationController::class, 'update']);
+        Route::get('/room-configurations/list',[RoomConfigurationController::class, 'list']);
+
         Route::get('/properties/for-room-configuration', [PropertyController::class, 'propertiesForRoomConfiguration']);
         Route::get('/properties/{id}/room-types/for-configuration',[RoomTypeController::class, 'roomTypesForConfiguration']);
+
+        Route::get('/properties/{id}', [PropertyController::class, 'show']);
+        Route::get('/room-types/{id}', [RoomTypeController::class, 'show']);
+       
         
-    });
+});
+
+
+Route::prefix('vehicle')
+    ->middleware(['auth:sanctum', HotelAdminCheck::class])
+    ->group(function () {
+     
+    Route::post('/vehicle',[VehicleController::class, 'store']);
+    Route::patch('/vehicle/{id}',[VehicleController::class, 'update']);
+
+    Route::get('/list',[VehicleController::class, 'list']);
+
+    Route::get('/{id}',[VehicleController::class, 'show']);
+        
+});

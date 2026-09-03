@@ -150,4 +150,46 @@ class RoomConfigurationController extends Controller
             ], 500);
         }
     }
+
+    public function list(Request $request)
+    {
+        try {
+            $query = RoomConfiguration::query();
+
+            if ($request->filled('room_type_id')) {
+                $query->where(
+                    'room_type_id',
+                    $request->integer('room_type_id')
+                );
+            }
+
+            if ($request->filled('type')) {
+                $query->where(
+                    'type',
+                    $request->input('type')
+                );
+            }
+
+            $configurations = $query
+                ->latest()
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $configurations,
+            ], 200);
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch room configurations', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch room configurations.',
+            ], 500);
+        }
+    }
+
 }
