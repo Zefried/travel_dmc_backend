@@ -1,9 +1,9 @@
 <?php
 
+use App\Http\Controllers\Activity\ActivityController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\Auth\AuthController;
-// use App\Http\Controllers\BookingController\BookingController;
 use App\Http\Controllers\Location\CityController;
 use App\Http\Controllers\Location\CountryController;
 use App\Http\Controllers\Location\StateController;
@@ -17,6 +17,7 @@ use App\Http\Middleware\CheckAdmin;
 use App\Http\Middleware\HotelAdminCheck;
 use App\Http\Middleware\VehicleAdminCheck;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -65,6 +66,7 @@ Route::prefix('admin')
     });
 
 
+
 Route::prefix('hotel')
     ->middleware(['auth:sanctum', HotelAdminCheck::class])
     ->group(function () {
@@ -105,7 +107,6 @@ Route::prefix('hotel')
         
 });
 
-
 Route::prefix('vehicle')
     ->middleware(['auth:sanctum', VehicleAdminCheck::class])
     ->group(function () {
@@ -113,8 +114,12 @@ Route::prefix('vehicle')
     Route::post('/',[VehicleController::class, 'store']);
     Route::patch('/{id}',[VehicleController::class, 'update']);
     Route::get('/list',[VehicleController::class, 'list']);
+});
 
-
-
-      
+Route::prefix('activity')
+    ->middleware(['auth:sanctum', CheckAdmin::class]) 
+    ->group(function () {
+    
+    Route::post('/', [ActivityController::class, 'store']);
+    Route::patch('/{id}', [ActivityController::class, 'update']);
 });
