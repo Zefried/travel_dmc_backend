@@ -121,14 +121,13 @@ Route::prefix('vehicle')
 Route::prefix('activity')
     ->middleware(['auth:sanctum', CheckAdmin::class]) 
     ->group(function () {
-
-        
     
     Route::post('/', [ActivityController::class, 'store']);
     Route::get('/list', [ActivityController::class, 'list']);
     Route::patch('/{id}', [ActivityController::class, 'update']);
 
       // Activity Transfers
+    Route::get('/transfers', [ActivityController::class, 'listTransfers']);
     Route::post('/transfers', [ActivityController::class, 'storeTransfer']);
     
 });

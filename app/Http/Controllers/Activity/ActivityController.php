@@ -222,7 +222,48 @@ class ActivityController extends Controller
 
 
     // activity transfer will be handled here
-       public function storeTransfer(Request $request)
+       public function listTransfers(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'activity_id' => 'sometimes|integer|exists:activities,id',
+                'page' => 'sometimes|integer|min:1',
+            ]);
+
+            $query = ActivityTransfer::with('activity')
+                ->latest();
+
+            if ($request->filled('activity_id')) {
+                $query->where('activity_id', $validated['activity_id']);
+            }
+
+            $transfers = $query->paginate(10);
+
+            return response()->json([
+                'status' => true,
+                'data' => $transfers,
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (Throwable $e) {
+            Log::error('Failed to fetch activity transfers', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch activity transfers.',
+            ], 500);
+        }
+    }
+
+    public function storeTransfer(Request $request)
     {
         try {
 
