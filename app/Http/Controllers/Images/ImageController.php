@@ -13,6 +13,31 @@ use Throwable;
 class ImageController extends Controller
 {
 
+    public function index(Request $request)
+    {
+        $validated = $request->validate([
+            'imageable_id' => 'required|integer',
+            'imageable_type' => 'required|string',
+        ]);
+
+        $images = Image::where(
+            'imageable_id',
+            $validated['imageable_id']
+        )
+            ->where(
+                'imageable_type',
+                $validated['imageable_type']
+            )
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $images,
+        ]);
+    }
+
     public function store(Request $request)
     {
         try {

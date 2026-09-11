@@ -137,6 +137,7 @@ Route::prefix('images')
     ->middleware(['auth:sanctum', CheckAdmin::class]) 
     ->group(function () {
 
+      Route::get('/', [ImageController::class, 'index']);
       Route::post('/', [ImageController::class, 'store']);
     
 });
