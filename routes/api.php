@@ -6,6 +6,7 @@ use App\Http\Controllers\Amenity\AmenityController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Location\CityController;
 use App\Http\Controllers\Location\CountryController;
+use App\Http\Controllers\Images\ImageController;
 use App\Http\Controllers\Location\StateController;
 use App\Http\Controllers\PropAmenityConfig\PropertyAmenityConfigController;
 use App\Http\Controllers\Property\PropertyController;
@@ -17,6 +18,7 @@ use App\Http\Middleware\CheckAdmin;
 use App\Http\Middleware\HotelAdminCheck;
 use App\Http\Middleware\VehicleAdminCheck;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -119,7 +121,22 @@ Route::prefix('vehicle')
 Route::prefix('activity')
     ->middleware(['auth:sanctum', CheckAdmin::class]) 
     ->group(function () {
+
+        
     
     Route::post('/', [ActivityController::class, 'store']);
+    Route::get('/list', [ActivityController::class, 'list']);
     Route::patch('/{id}', [ActivityController::class, 'update']);
+
+      // Activity Transfers
+    Route::post('/transfers', [ActivityController::class, 'storeTransfer']);
+    
+});
+
+Route::prefix('images')
+    ->middleware(['auth:sanctum', CheckAdmin::class]) 
+    ->group(function () {
+
+      Route::post('/', [ImageController::class, 'store']);
+    
 });

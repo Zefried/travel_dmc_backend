@@ -36,4 +36,9 @@ class Activity extends Model
     {
         return $this->belongsTo(City::class);
     }
+
+    public function activityTransfers()
+    {
+        return $this->hasMany(ActivityTransfer::class);
+    }
 }

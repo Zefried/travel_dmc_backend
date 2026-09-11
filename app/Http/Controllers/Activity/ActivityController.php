@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Activity;
 
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
+use App\Models\ActivityTransfer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -182,6 +183,111 @@ class ActivityController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update activity.',
+            ], 500);
+        }
+    }
+
+    public function list(Request $request)
+    {
+        try {
+
+            $activities = Activity::with([
+                'country',
+                'state',
+                'city',
+            ])
+                ->latest()
+                ->paginate(10);
+
+
+            return response()->json([
+                'status' => true,
+                'data' => $activities,
+            ], 200);
+
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to fetch activity list', [
+                'error' => $e->getMessage(),
+            ]);
+
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch activity list.',
+            ], 500);
+        }
+    }
+
+
+    // activity transfer will be handled here
+       public function storeTransfer(Request $request)
+    {
+        try {
+
+            $validated = $request->validate([
+                'activity_id' =>
+                    'required|integer|exists:activities,id',
+
+                'name' =>
+                    'required|string|max:255',
+
+                'transfer_type' =>
+                    'required|in:shared,private',
+
+                'transfer_duration' =>
+                    'required|numeric|min:0.1',
+
+                'transfer_duration_unit' =>
+                    'required|in:minutes,hours',
+
+                'transfer_price' =>
+                    'required|numeric|min:0',
+
+                'pickup_type' =>
+                    'nullable|string|max:255',
+
+                'pickup_description' =>
+                    'nullable|string',
+
+                'status' =>
+                    'nullable|in:active,inactive',
+            ]);
+
+
+            $transfer = ActivityTransfer::create(
+                $validated
+            );
+
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Activity transfer created successfully.',
+                'data' => $transfer,
+            ], 201);
+
+
+        } catch (ValidationException $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+
+
+        } catch (Throwable $e) {
+
+            Log::error('Failed to create activity transfer', [
+                'error' => $e->getMessage(),
+            ]);
+
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create activity transfer.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
