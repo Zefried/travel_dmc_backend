@@ -27,4 +27,9 @@ class Vehicle extends Model
     {
         return $this->belongsTo(User::class, 'vehicle_admin_id');
     }
+
+    public function calendars()
+    {
+        return $this->hasMany(VehicleCalendar::class);
+    }
 }

@@ -14,6 +14,7 @@ use App\Http\Controllers\RoomConfiguration\RoomConfigurationController;
 use App\Http\Controllers\Rooms\RoomController;
 use App\Http\Controllers\RoomType\RoomTypeController;
 use App\Http\Controllers\Vehicle\VehicleController;
+use App\Http\Controllers\VehicleCalendar\VehicleCalendarController;
 use App\Http\Middleware\CheckAdmin;
 use App\Http\Middleware\HotelAdminCheck;
 use App\Http\Middleware\VehicleAdminCheck;
@@ -109,6 +110,7 @@ Route::prefix('hotel')
         
 });
 
+
 Route::prefix('vehicle')
     ->middleware(['auth:sanctum', VehicleAdminCheck::class])
     ->group(function () {
@@ -116,7 +118,14 @@ Route::prefix('vehicle')
     Route::post('/',[VehicleController::class, 'store']);
     Route::patch('/{id}',[VehicleController::class, 'update']);
     Route::get('/list',[VehicleController::class, 'list']);
+    Route::get('/availability',[VehicleController::class, 'availability']);
+
+    Route::post('/calendar', [VehicleCalendarController::class, 'store']);
+    Route::patch('/calendar/{id}', [VehicleCalendarController::class, 'update']);
+    Route::delete('/calendar/{id}', [VehicleCalendarController::class, 'destroy']);
+    Route::get('/calendar/list', [VehicleCalendarController::class, 'list']);
 });
+
 
 Route::prefix('activity')
     ->middleware(['auth:sanctum', CheckAdmin::class]) 

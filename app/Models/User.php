@@ -56,4 +56,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Property::class, 'hotel_admin_id');
     }
+
+    public function vehicleCalendars()
+    {
+        return $this->hasMany(VehicleCalendar::class, 'vehicle_admin_id');
+    }
 }
