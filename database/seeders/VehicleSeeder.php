@@ -54,7 +54,7 @@ class VehicleSeeder extends Seeder
                         'color'            => $v == 3 ? 'Black' : 'White',
                         'driver_name'      => 'Driver ' . $admin->id . '-' . $v,
                         'driver_phone'     => '98' . str_pad($admin->id, 4, '0', STR_PAD_LEFT) . str_pad($v, 4, '0', STR_PAD_LEFT),
-                        'status'           => 'Active',
+                        'status'           => 'active',
                     ]
                 );
             }
