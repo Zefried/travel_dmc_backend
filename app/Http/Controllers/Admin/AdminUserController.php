@@ -15,6 +15,26 @@ class AdminUserController extends Controller
         protected AuthService $authService
     ) {}
 
+    public function index(Request $request)
+    {
+        $role = $request->query('role');
+        
+        $query = User::query();
+        if ($role) {
+            $query->where('role', $role);
+        }
+        
+        $users = $query->select('id', 'name', 'email', 'phone', 'role', 'created_at')
+                       ->orderBy('created_at', 'desc')
+                       ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $users,
+        ], 200);
+    }
+
+
     public function store(Request $request)
     {
         $result = $this->authService->createAdminUser($request->all());
@@ -36,6 +56,24 @@ class AdminUserController extends Controller
             'message' => $result['message'],
             'data' => $result['data'] ?? null,
         ], $result['code']);
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->delete();
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'User deleted successfully',
+            ], 200);
+        } catch (Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete user.',
+            ], 500);
+        }
     }
 
     public function searchHotelAdmins(Request $request)
