@@ -9,6 +9,10 @@ class Vehicle extends Model
 {
     use HasFactory;
 
+    protected $attributes = [
+        'status' => 'active',
+    ];
+
     protected $fillable = [
         'vehicle_admin_id',
         'type',
@@ -28,8 +32,8 @@ class Vehicle extends Model
         return $this->belongsTo(User::class, 'vehicle_admin_id');
     }
 
-    public function calendars()
+    public function busySchedules()
     {
-        return $this->hasMany(VehicleCalendar::class);
+        return $this->hasMany(VehicleBusySchedule::class);
     }
 }

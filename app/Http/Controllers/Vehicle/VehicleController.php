@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Vehicle;
 
 use App\Http\Controllers\Controller;
-use App\Models\VehicleCalendar;
+
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -98,6 +98,7 @@ class VehicleController extends Controller
                 ])
             );
 
+            $validated['status'] = $validated['status'] ?? 'active';
 
             if (!empty($validated['registration_no'])) {
 
@@ -279,9 +280,10 @@ class VehicleController extends Controller
             }
 
 
+            $perPage = max(1, min($request->integer('per_page', 5), 100));
             $vehicles = $query
                 ->latest()
-                ->paginate(5);
+                ->paginate($perPage);
 
 
             return response()->json([
@@ -304,117 +306,5 @@ class VehicleController extends Controller
         }
     }
 
-    public function availability(Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'start_date' => 'nullable|date',
-                'end_date' => 'nullable|date|after_or_equal:start_date',
-                'vehicle_admin_id' => 'nullable|integer|exists:users,id',
-                'status' => 'nullable|in:active,inactive',
-                'availability' => 'nullable|in:available,unavailable',
-                'search' => 'nullable|string|max:100',
-                'per_page' => 'nullable|integer|min:1|max:100',
-            ]);
 
-            $startDate = $validated['start_date'] ?? now()->toDateString();
-            $endDate = $validated['end_date'] ?? $startDate;
-
-            $query = Vehicle::with([
-                'vehicleAdmin:id,name,email,phone,is_active',
-                'calendars' => function ($calendarQuery) use ($startDate, $endDate) {
-                    $calendarQuery
-                        ->where('is_active', true)
-                        ->whereIn('status', ['busy', 'maintenance'])
-                        ->where('start_date', '<=', $endDate)
-                        ->where('end_date', '>=', $startDate)
-                        ->orderBy('start_date');
-                },
-            ]);
-
-            if ($request->user()->role === 'vehicle_admin') {
-                $query->where('vehicle_admin_id', $request->user()->id);
-            }
-
-            if (!empty($validated['vehicle_admin_id'])) {
-                $query->where('vehicle_admin_id', $validated['vehicle_admin_id']);
-            }
-
-            if (!empty($validated['status'])) {
-                $query->where('status', $validated['status']);
-            }
-
-            if (!empty($validated['search'])) {
-                $search = $validated['search'];
-                $query->where(function ($searchQuery) use ($search) {
-                    $searchQuery
-                        ->where('name', 'like', "%{$search}%")
-                        ->orWhere('type', 'like', "%{$search}%")
-                        ->orWhere('model', 'like', "%{$search}%")
-                        ->orWhere('registration_no', 'like', "%{$search}%")
-                        ->orWhere('driver_name', 'like', "%{$search}%");
-                });
-            }
-
-            if (!empty($validated['availability'])) {
-                $calendarScope = function ($calendarQuery) use ($startDate, $endDate) {
-                    $calendarQuery
-                        ->where('is_active', true)
-                        ->whereIn('status', ['busy', 'maintenance'])
-                        ->where('start_date', '<=', $endDate)
-                        ->where('end_date', '>=', $startDate);
-                };
-
-                if ($validated['availability'] === 'available') {
-                    $query->where('status', '!=', 'inactive')
-                        ->whereDoesntHave('calendars', $calendarScope);
-                } else {
-                    $query->where(function ($availabilityQuery) use ($calendarScope) {
-                        $availabilityQuery
-                            ->where('status', 'inactive')
-                            ->orWhereHas('calendars', $calendarScope);
-                    });
-                }
-            }
-
-            $vehicles = $query
-                ->latest()
-                ->paginate($validated['per_page'] ?? 10)
-                ->through(function (Vehicle $vehicle) {
-                    $isUnavailable = $vehicle->status === 'inactive'
-                        || $vehicle->calendars->isNotEmpty();
-
-                    return array_merge($vehicle->toArray(), [
-                        'availability' => $isUnavailable ? 'unavailable' : 'available',
-                        'availability_reason' => $vehicle->status === 'inactive'
-                            ? 'Vehicle is inactive'
-                            : ($vehicle->calendars->isNotEmpty() ? 'Busy or under maintenance' : null),
-                    ]);
-                });
-
-            return response()->json([
-                'status' => true,
-                'data' => $vehicles,
-                'range' => [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                ],
-            ], 200);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation failed.',
-                'errors' => $e->errors(),
-            ], 422);
-        } catch (Throwable $e) {
-            Log::error('Failed to fetch vehicle availability', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to fetch vehicle availability.',
-            ], 500);
-        }
-    }
 }
