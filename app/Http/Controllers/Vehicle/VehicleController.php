@@ -306,5 +306,72 @@ class VehicleController extends Controller
         }
     }
 
+    public function availability(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'vehicle_admin_id' => 'nullable|integer|exists:users,id',
+            ]);
 
+            $startDate = $validated['start_date'];
+            $endDate = $validated['end_date'];
+            $vehicleAdminId = $validated['vehicle_admin_id'] ?? null;
+
+            $query = Vehicle::query()->with(['vehicleAdmin:id,name', 'busySchedules' => function ($q) use ($startDate, $endDate) {
+                $q->where(function ($query) use ($startDate, $endDate) {
+                    $query->whereBetween('start_date', [$startDate, $endDate])
+                        ->orWhereBetween('end_date', [$startDate, $endDate])
+                        ->orWhere(function ($q2) use ($startDate, $endDate) {
+                            $q2->where('start_date', '<=', $startDate)
+                                ->where('end_date', '>=', $endDate);
+                        });
+                });
+            }]);
+
+            if ($vehicleAdminId) {
+                $query->where('vehicle_admin_id', $vehicleAdminId);
+            }
+
+            $vehicles = $query->get()->map(function ($vehicle) {
+                $isBusy = $vehicle->busySchedules->isNotEmpty();
+                $vehicle->is_available = !$isBusy;
+                
+                if ($isBusy) {
+                    // Get the overlapping schedules to show to frontend
+                    $vehicle->overlapping_schedules = $vehicle->busySchedules->map(function ($schedule) {
+                        return [
+                            'start_date' => $schedule->start_date,
+                            'end_date' => $schedule->end_date,
+                            'reason' => $schedule->reason,
+                        ];
+                    });
+                }
+                
+                // Remove the busySchedules relationship from output to keep it clean
+                unset($vehicle->busySchedules);
+                
+                return $vehicle;
+            });
+
+            return response()->json([
+                'status' => true,
+                'data' => $vehicles
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (Throwable $e) {
+            Log::error('Fetch vehicle availability failed: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong.'
+            ], 500);
+        }
+    }
 }

@@ -66,6 +66,17 @@ Route::prefix('admin')
         Route::get('/room-types/for-rooms', [RoomController::class, 'roomTypesForRooms']); // search
         Route::get('/room-types/list', [RoomTypeController::class, 'roomTypeList']); // list
         Route::get('/rooms/list', [RoomController::class, 'list']); // room list
+        
+        Route::get('/vehicles/availability', [VehicleController::class, 'availability']); // vehicle availability
+        Route::post('/vehicles/booking-requests', [\App\Http\Controllers\Vehicle\VehicleBookingRequestController::class, 'store']);
+        Route::get('/vehicles/booking-requests/status', [\App\Http\Controllers\Vehicle\VehicleBookingRequestController::class, 'indexForMainAdmin']);
+    });
+
+    // Notifications (Available to all authenticated users)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+        Route::patch('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
+        Route::patch('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
     });
 
 
@@ -122,6 +133,9 @@ Route::prefix('vehicle')
     Route::post('/mark-busy', [\App\Http\Controllers\VehicleBusyScheduleController::class, 'store']);
     Route::patch('/busy-schedules/{id}', [\App\Http\Controllers\VehicleBusyScheduleController::class, 'update']);
     Route::delete('/busy-schedules/{id}', [\App\Http\Controllers\VehicleBusyScheduleController::class, 'destroy']);
+
+    Route::get('/booking-requests', [\App\Http\Controllers\Vehicle\VehicleBookingRequestController::class, 'indexForVehicleAdmin']);
+    Route::patch('/booking-requests/{id}/status', [\App\Http\Controllers\Vehicle\VehicleBookingRequestController::class, 'updateStatus']);
 
     Route::patch('/{id}',[VehicleController::class, 'update']);
 });
