@@ -209,4 +209,41 @@ class RoomController extends Controller
             ], 500);
         }
     }
+    public function availability(Request $request)
+    {
+        try {
+            $request->validate([
+                'room_type_id' => 'required|integer|exists:room_types,id',
+            ]);
+
+            $rooms = Room::with(['busySchedules' => function ($query) {
+                $query->where('end_date', '>=', now()->toDateString())
+                      ->orderBy('start_date');
+            }])
+            ->where('room_type_id', $request->integer('room_type_id'))
+            ->orderBy('room_no')
+            ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $rooms,
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (Throwable $e) {
+            Log::error('Failed to fetch rooms availability', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch rooms availability.',
+            ], 500);
+        }
+    }
 }

@@ -109,13 +109,19 @@ class AdminUserController extends Controller
         ], 200);
     }
 
-    public function hotelAdminList()
+    public function hotelAdminList(Request $request)
     {
         try {
-            $hotelAdmins = User::where('role', 'hotel_admin')
-                ->select('id', 'name', 'phone', 'email')
-                ->orderBy('name')
-                ->get();
+            $query = User::where('role', 'hotel_admin')
+                ->select('id', 'name', 'phone', 'email');
+
+            if ($request->filled('state_id')) {
+                $query->whereHas('properties', function ($q) use ($request) {
+                    $q->where('state_id', $request->integer('state_id'));
+                });
+            }
+
+            $hotelAdmins = $query->orderBy('name')->get();
 
             return response()->json([
                 'status' => true,

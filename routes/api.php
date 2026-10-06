@@ -66,6 +66,9 @@ Route::prefix('admin')
         Route::get('/room-types/for-rooms', [RoomController::class, 'roomTypesForRooms']); // search
         Route::get('/room-types/list', [RoomTypeController::class, 'roomTypeList']); // list
         Route::get('/rooms/list', [RoomController::class, 'list']); // room list
+        Route::get('/rooms/availability', [RoomController::class, 'availability']); // room availability
+
+        Route::get('/properties/options', [PropertyController::class, 'options']); // admin property options
         
         Route::get('/vehicles/availability', [VehicleController::class, 'availability']); // vehicle availability
         Route::post('/vehicles/booking-requests', [\App\Http\Controllers\Vehicle\VehicleBookingRequestController::class, 'store']);
