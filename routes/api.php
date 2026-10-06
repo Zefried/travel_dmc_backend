@@ -117,8 +117,15 @@ Route::prefix('hotel')
 
         Route::get('/properties/{id}', [PropertyController::class, 'show']);
         Route::get('/room-types/{id}', [RoomTypeController::class, 'show']);
-       
-        
+
+        // Room Busy Schedules
+        Route::get('/mark-busy/my-properties', [\App\Http\Controllers\Hotel\RoomBusyScheduleController::class, 'myProperties']);
+        Route::get('/mark-busy/properties/{id}/room-types', [\App\Http\Controllers\Hotel\RoomBusyScheduleController::class, 'roomTypesForProperty']);
+        Route::get('/mark-busy/room-types/{id}/rooms', [\App\Http\Controllers\Hotel\RoomBusyScheduleController::class, 'roomsForRoomType']);
+        Route::get('/room-busy-schedules', [\App\Http\Controllers\Hotel\RoomBusyScheduleController::class, 'index']);
+        Route::post('/room-busy-schedules', [\App\Http\Controllers\Hotel\RoomBusyScheduleController::class, 'store']);
+        Route::patch('/room-busy-schedules/{id}', [\App\Http\Controllers\Hotel\RoomBusyScheduleController::class, 'update']);
+        Route::delete('/room-busy-schedules/{id}', [\App\Http\Controllers\Hotel\RoomBusyScheduleController::class, 'destroy']);
 });
 
 

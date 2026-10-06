@@ -137,7 +137,7 @@ class PropertySeeder extends Seeder
                     'phone'             => $propData['phone'],
                     'alternative_phone' => $propData['alternative_phone'],
                     'website'           => $propData['website'],
-                    'status'            => 'Active',
+                    'status'            => 'active',
                 ]
             );
         }
