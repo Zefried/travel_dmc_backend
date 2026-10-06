@@ -18,6 +18,8 @@ class Activity extends Model
         'description',
         'duration',
         'duration_unit',
+        'start_time',
+        'end_time',
         'base_price',
         'status',
     ];

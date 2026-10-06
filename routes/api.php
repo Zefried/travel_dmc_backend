@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
-
+Route::get('/public/activities', [ActivityController::class, 'list']);
 
 Route::post('/register',[AuthController::class, 'register']);
 Route::post('/login',[AuthController::class, 'login']);

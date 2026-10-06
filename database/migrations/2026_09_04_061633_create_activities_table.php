@@ -33,6 +33,9 @@ return new class extends Migration
             $table->decimal('duration', 5, 2);
             $table->string('duration_unit')->default('hours');
 
+            $table->time('start_time');
+            $table->time('end_time')->nullable();
+
             $table->decimal('base_price', 10, 2);
 
             $table->string('status')->default('active');

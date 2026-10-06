@@ -40,6 +40,12 @@ class ActivityController extends Controller
             'duration_unit' =>
                 'required|in:minutes,hours,days',
 
+            'start_time' =>
+                'required|date_format:H:i',
+
+            'end_time' =>
+                'nullable|date_format:H:i|after:start_time',
+
             'base_price' =>
                 'required|numeric|min:0',
 
@@ -75,6 +81,12 @@ class ActivityController extends Controller
 
             'duration_unit' =>
                 'sometimes|in:minutes,hours,days',
+
+            'start_time' =>
+                'sometimes|date_format:H:i',
+
+            'end_time' =>
+                'sometimes|nullable|date_format:H:i|after:start_time',
 
             'base_price' =>
                 'sometimes|numeric|min:0',
@@ -191,13 +203,25 @@ class ActivityController extends Controller
     {
         try {
 
-            $activities = Activity::with([
+            $query = Activity::with([
                 'country',
                 'state',
                 'city',
-            ])
-                ->latest()
-                ->paginate(10);
+            ])->latest();
+
+            if ($request->filled('country_id')) {
+                $query->where('country_id', $request->country_id);
+            }
+
+            if ($request->filled('state_id')) {
+                $query->where('state_id', $request->state_id);
+            }
+
+            if ($request->filled('city_id')) {
+                $query->where('city_id', $request->city_id);
+            }
+
+            $activities = $query->paginate(10);
 
 
             return response()->json([
